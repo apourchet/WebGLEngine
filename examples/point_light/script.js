@@ -15,13 +15,13 @@ function webGLStart() {
 		isPoint: true,
 		ambientColor: [0.2, 0.2, 0.2],
 		// Make the light a little blue this time
-		lightingColor: [0.8, 0.8, 1],
-		position: [0, 0, 30],
-		maxRange: 50
+		lightingColor: [0.4, 0.4, 1],
+		position: [0, 0, 0.4],
+		maxRange: 1
 	});
 
 	glCamera = new GLCamera({
-		eye: [5, 5, 10],
+		eye: [0, 0, 10],
 		target: [0, 0, 0],
 		up: [0, 1, 0]
 	});
@@ -53,8 +53,7 @@ function webGLStart() {
 
 	gleng.on(GLEngine.EVENT_DRAW, function(gl) {
 		angle = (angle + 0.01) % 360;
-		gleng.light.position[0] = Math.sin(angle) * 1;
-
+		gleng.light.position[0] = Math.sin(angle) * 0.5;
 		mesh.draw();
 	});
 
@@ -67,11 +66,7 @@ function webGLStart() {
 				count: 3,
 				type: 'attribute',
 			},
-			color: {
-				name: 'aColor',
-				count: 4,
-				type: 'attribute'
-			},
+
 			texture: {
 				name: 'aTex',
 				count: 2,
@@ -135,12 +130,6 @@ function webGLStart() {
 				count: 3,
 				type: 'uniform',
 				uniformType: 'vec3'
-			},
-			pointSize: {
-				name: 'pointSize',
-				count: 1,
-				type: 'uniform',
-				uniformType: 'float'
 			},
 			maxLightRange: {
 				name: 'maxLightRange',
