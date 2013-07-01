@@ -1,7 +1,7 @@
 /*isPoint, ambientColor, lightingColor, specularColor, 
 direction, position, maxRange*/
 var GLLight = function(params) {
-	if(!params) var params = {};
+	if (!params) var params = {};
 	this.isPoint = params.isPoint ? params.isPoint : false;
 
 	this.ambientColor = params.ambientColor ? params.ambientColor : [0.5, 0.5, 0.5];
@@ -29,7 +29,7 @@ GLLight.prototype.toString = function() {
 
 /* eye, target, up*/
 var GLCamera = function(params) {
-	if(!params) var params = {};
+	if (!params) var params = {};
 	this.eye = params.eye ? params.eye : [0, 0, 1];
 	this.target = params.target ? params.target : [0, 0, 0];
 	this.up = params.up ? params.up : [0, 1, 0];
@@ -285,17 +285,20 @@ GLEngine.prototype.setMatrixUniforms = function() {
 GLEngine.prototype.setLighting = function(enable) {
 	var gl = this.gl;
 	var attsSet = this.currentProgram.attributeSet;
+	if (!attsSet.useLighting) {
+		return;
+	}
 	gl.uniform1i(attsSet.useLighting.location, enable);
 	if (enable) {
-		gl.uniform3fv(attsSet.ambientColor.location, this.light.ambientColor);
-		gl.uniform3fv(attsSet.lightingColor.location, this.light.lightingColor);
+		if(attsSet.ambientColor) gl.uniform3fv(attsSet.ambientColor.location, this.light.ambientColor);
+		if(attsSet.lightingColor) gl.uniform3fv(attsSet.lightingColor.location, this.light.lightingColor);
 		if (this.light.isPoint) {
-			gl.uniform1f(attsSet.maxLightRange.location, this.light.maxRange);
-			gl.uniform1i(attsSet.usePointLighting.location, true);
-			gl.uniform3fv(attsSet.lightingPosition.location, this.light.position);
+			if(attsSet.maxLightRange) gl.uniform1f(attsSet.maxLightRange.location, this.light.maxRange);
+			if(attsSet.usePointLighting) gl.uniform1i(attsSet.usePointLighting.location, true);
+			if(attsSet.lightingPosition) gl.uniform3fv(attsSet.lightingPosition.location, this.light.position);
 		} else {
-			gl.uniform1i(attsSet.usePointLighting.location, false);
-			gl.uniform3fv(attsSet.lightingDirection.location, this.light.direction);
+			if(attsSet.usePointLighting) gl.uniform1i(attsSet.usePointLighting.location, false);
+			if(attsSet.lightingDirection) gl.uniform3fv(attsSet.lightingDirection.location, this.light.direction);
 		}
 	}
 };
@@ -336,7 +339,7 @@ GLEngine.prototype.enableAttribute = function(attributeName) {
 			}
 		}
 	} else {
-		console.log("Attribute was not found...");
+		AntiSpammer.tell('AttributeNotFound', "Attribute was not found...");
 	}
 };
 
@@ -347,7 +350,7 @@ GLEngine.prototype.disableAttribute = function(attributeName) {
 			this.gl.disableVertexAttribArray(att.location);
 		}
 	} else {
-		console.log("Attribute was not found...");
+		AntiSpammer.tell('AttributeNotFound', "Attribute was not found...");
 	}
 };
 
@@ -582,10 +585,10 @@ GLEngine.GLPrimitiveMeshes.TexturedSquare = function(gleng, size, imageSource) {
 		],
 		colorArray: null,
 		textureArray: [
-			0, 0,
 			0, 1,
-			1, 0,
 			1, 1,
+			0, 0,
+			1, 0
 		],
 		normalArray: [
 			0.0, 0.0, 1.0,
@@ -608,7 +611,7 @@ GLEngine.GLPrimitiveMeshes.PointCloud = function(gleng, objFileSource) {
 		console.log("PointCloud from " + objFileSource);
 		vert = GLFileLoader.getFile(objFileSource).vertexArray;
 		for (var i = 0; i < vert.length; i += 3) {
-			color.push(vert[i+2], vert[i], vert[i+1], 1.0);
+			color.push(vert[i + 2], vert[i], vert[i + 1], 1.0);
 		}
 	} else {
 		for (var i = 0; i < 1; i += 0.005) {
