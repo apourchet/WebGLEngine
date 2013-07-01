@@ -1,0 +1,107 @@
+<html>
+<head>
+	<title>WebGL Engine Example</title>
+	<script type="text/javascript" src='../../lib/glMatrix.min.js'></script>
+	<script type="text/javascript" src='../../lib/jquery.min.js'></script>
+	<script type="text/javascript" src='../../glengine.js'></script>
+	<script id='vertexShader' type='x-shader/x-vertex'>
+		attribute vec3 aPos;
+		attribute vec4 aColor;
+		attribute vec2 aTex;
+		attribute vec3 aNorm;
+
+		uniform mat4 uMVMatrix;
+		uniform mat4 uPMatrix;
+		uniform mat4 uLookAtMatrix;
+
+		uniform vec3 uLightingPosition;
+
+		uniform float maxLightRange;
+		uniform float pointSize;
+
+		varying vec4 vColor;
+		varying vec2 vTex;
+		varying vec3 vNorm;
+		varying vec3 vPos;
+		varying vec3 vLightingPosition;
+
+		void main(void) {
+			if(pointSize != 0.0){
+				gl_PointSize = pointSize;
+			}
+
+			gl_Position = uPMatrix * uMVMatrix * vec4(aPos, 1.0);
+			vPos = (uMVMatrix * vec4(aPos, 1.0)).xyz;	
+			vLightingPosition = (uLookAtMatrix * vec4(uLightingPosition, 1.0)).xyz;
+			vColor = aColor;
+			vTex = aTex;
+			vNorm = aNorm;
+		}
+	</script>
+	<script id='fragmentShader' type='x-shader/x-fragment'>
+		precision lowp float;
+
+		uniform sampler2D uImage;
+
+		uniform mat4 uPMatrix;
+		uniform mat4 uNMatrix;
+		uniform mat4 uLookAtMatrix;
+
+		uniform vec3 uAmbientColor;
+		uniform vec3 uLightingColor;
+		uniform vec3 uLightingDirection;
+		uniform vec3 uLightingPosition;
+
+		uniform bool uUseLighting;
+		uniform bool uUsePointLighting;
+
+		uniform float maxLightRange;
+
+		varying vec4 vColor;
+		varying vec2 vTex;
+		varying vec3 vNorm;
+		varying vec3 vPos;
+		varying vec3 vLightingPosition;
+
+		void main(void) {
+
+			if(vColor != vec4(0, 0, 0, 1)) {
+				gl_FragColor = vColor;
+			}else{
+				vec3 vLightWeight = vec3(1.0, 1.0, 1.0);
+				vec4 textureColor = texture2D(uImage, vTex);
+
+				if(uUseLighting){
+					if(uUsePointLighting){
+						float range = maxLightRange;
+
+						if(range == 0.0){
+							range = 3.0;
+						}
+						
+						vec3 lightDirection = normalize(vPos - vLightingPosition);
+						float theDistance = distance(vLightingPosition, vPos);
+
+						float diminish = (theDistance / range);
+						float directionalLightWeighting = max(dot(vNorm, normalize(lightDirection) * vec3(-1, -1, -1)), 0.0);
+
+						vLightWeight = uAmbientColor + uLightingColor * directionalLightWeighting / (diminish);
+
+					} else {
+						vec3 transformedNormal = vNorm;
+						float directionalLightWeighting = max(dot(transformedNormal, normalize(uLightingDirection) * vec3(-1, -1, -1)), 0.0);
+						vLightWeight = uAmbientColor + uLightingColor * directionalLightWeighting;
+					}
+				}
+
+				gl_FragColor = vec4(textureColor.rgb * vLightWeight, textureColor.a);
+		 	}
+		}
+
+	</script>
+	<script type="text/javascript" src='script.js'></script>
+</head>
+<body>
+
+</body>
+</html>
