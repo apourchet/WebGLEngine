@@ -821,7 +821,13 @@ GLMatrix.printStack = function(matrix) {
 
 	for (var i = 0; i < GLMatrix.stacks.length; i++) {
 		if (GLMatrix.stacks[i].matrix == matrix) {
-			console.log(GLMatrix.stacks[i].stack.toString(mat4.str));
+			var f;
+			if(matrix.length == 16){
+				f = mat4.str;
+			}else{
+				f = mat3.str;
+			}
+			console.log(GLMatrix.stacks[i].stack.toString(f));
 			return;
 		}
 	}
@@ -832,7 +838,7 @@ GLMatrix.matrixPop = function(matrix) {
 	for (var i = 0; i < GLMatrix.stacks.length; i++) {
 		if (GLMatrix.stacks[i].matrix == matrix) {
 			var m = GLMatrix.stacks[i].stack.pop();
-			for(var i = 0 ; i < 16 ; i++){
+			for(var i = 0 ; i < m.length ; i++){
 				matrix[i] = m[i];
 			}
 			return matrix;
