@@ -21,7 +21,7 @@ function webGLStart() {
 
 	// Setup the camera
 	glCamera = new GLCamera({
-		eye: [0, 0, 10],
+		eye: [5, 10, 10],
 		target: [0, 0, 0],
 		up: [0, 1, 0]
 	});
@@ -51,6 +51,7 @@ function webGLStart() {
 	*/
 	mesh = new GLMesh({
 		gleng: gleng,
+		hasColor:false,
 		hasTexture: true,
 		hasLighting: true,
 		vertexArray: [
@@ -77,6 +78,7 @@ function webGLStart() {
 
 	mesh1 = new GLMesh({
 		gleng: gleng,
+		hasColor:false,
 		hasTexture: true,
 		hasLighting: true,
 		vertexArray: [
@@ -110,16 +112,16 @@ function webGLStart() {
 
 	gleng.on(GLEngine.EVENT_DRAW, function(gl) {
 		angle = (angle + 0.01) % 360;
-		gleng.camera.eye[0] = Math.sin(angle) * 4;
-		gleng.camera.eye[2] = Math.cos(angle) * 4;
+		gleng.camera.eye[0] = Math.sin(angle) * 15;
+		gleng.camera.eye[2] = Math.cos(angle) * 15;
 
 		mesh.draw();
 		mesh1.draw();
 	});
 
 	gleng.useProgram({
-		vertexShader: 'vertexShader',
-		fragmentShader: 'fragmentShader',
+		vertexShader: '../../shaders/vertex.sl',
+		fragmentShader: '../../shaders/fragment.sl',
 		attributeSet: {
 			pos: {
 				name: 'aPos',
@@ -131,6 +133,11 @@ function webGLStart() {
 				count: 2,
 				type: 'attribute'
 			},
+			color: {
+				name: 'aColor',
+				count: 4,
+				type: 'attribute'
+			}, 
 			normal: {
 				name: 'aNorm',
 				count: 3,
@@ -147,6 +154,12 @@ function webGLStart() {
 				count: 1,
 				type: 'uniform',
 				uniformType: 'mat4'
+			},
+			nMatrix: {
+				name: 'uNMatrix',
+				count: 1,
+				type: 'uniform',
+				uniformType: 'mat3'
 			},
 			lookAtMatrix: {
 				name: 'uLookAtMatrix',

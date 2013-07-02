@@ -102,8 +102,8 @@ function webGLStart() {
 	containing the vertex shader. You can guess what fragmentShader does.
 	*/
 	gleng.useProgram({
-		vertexShader: 'vertexShader',
-		fragmentShader: 'fragmentShader',
+		vertexShader: '../../shaders/vertex.sl',
+		fragmentShader: '../../shaders/fragment.sl',
 		attributeSet: {
 			/*Specify the variable name in the vertex shader that will contain the 
 			position of the vertex*/
@@ -118,18 +118,6 @@ function webGLStart() {
 				count: 4,
 				type: 'attribute'
 			},
-			/*Same for texture*/
-			// texture: {
-			// 	name: 'aTex',
-			// 	count: 2,
-			// 	type: 'attribute'
-			// },
-			/*Same for normal*/
-			// normal: {
-			// 	name: 'aNorm',
-			// 	count: 3,
-			// 	type: 'attribute'
-			// },
 			/*Projection matrix*/
 			pMatrix: {
 				name: 'uPMatrix',
@@ -151,62 +139,6 @@ function webGLStart() {
 				type: 'uniform',
 				uniformType: 'mat4'
 			},
-			/*Boolean for lighting*/
-			// useLighting: {
-			// 	name: 'uUseLighting',
-			// 	count: 1,
-			// 	type: 'uniform',
-			// 	uniformType: 'bool'
-			// },
-			/*Boolean for point lighting*/
-			// usePointLighting: {
-			// 	name: 'uUsePointLighting',
-			// 	count: 1,
-			// 	type: 'uniform',
-			// 	uniformType: 'bool'
-			// },
-			/*Array containing the ambient color of the light*/
-			// ambientColor: {
-			// 	name: 'uAmbientColor',
-			// 	count: 3,
-			// 	type: 'uniform',
-			// 	uniformType: 'vec3'
-			// },
-			/*Array containing the color of the light itself*/
-			// lightingColor: {
-			// 	name: 'uLightingColor',
-			// 	count: 3,
-			// 	type: 'uniform',
-			// 	uniformType: 'vec3'
-			// },
-			/*Array containing the direction of the light*/
-			// lightingDirection: {
-			// 	name: 'uLightingDirection',
-			// 	count: 3,
-			// 	type: 'uniform',
-			// 	uniformType: 'vec3'
-			// },
-			/*Array containing the position of the light*/
-			// lightingPosition: {
-			// 	name: 'uLightingPosition',
-			// 	count: 3,
-			// 	type: 'uniform',
-			// 	uniformType: 'vec3'
-			// },
-			/*Float corresponding to the size of the points for point drawing.*/
-			// pointSize: {
-			// 	name: 'pointSize',
-			// 	count: 1,
-			// 	type: 'uniform',
-			// 	uniformType: 'float'
-			// },
-			/*Maximum range of the light when it is a point light*/
-			// maxLightRange: {
-			// 	name: 'maxLightRange',
-			// 	count: 1,
-			// 	type: 'uniform',
-			// 	uniformType: 'float'
-			// },
 		},
 		callback: function() {
 			console.log("Starting the rendering");

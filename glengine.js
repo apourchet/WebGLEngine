@@ -12,8 +12,10 @@ var GLLight = function(params) {
 	this.position = params.position ? params.position : [0, 0, 0];
 
 	this.maxRange = params.maxRange ? params.maxRange : 25;
+
 	console.log("GLLight: \n" + this.toString());
 };
+
 
 GLLight.prototype.toString = function() {
 	var str = "";
@@ -280,6 +282,12 @@ GLEngine.prototype.setMatrixUniforms = function() {
 	this.gl.uniformMatrix4fv(this.currentProgram.attributeSet.pMatrix.location, false, this.pMatrix);
 	this.gl.uniformMatrix4fv(this.currentProgram.attributeSet.mvMatrix.location, false, this.mvMatrix);
 	this.gl.uniformMatrix4fv(this.currentProgram.attributeSet.lookAtMatrix.location, false, this.lookAtMatrix);
+
+	if (!this.currentProgram.attributeSet.nMatrix) return;
+	var nMatrix = mat4.create();
+	mat4.inverse(this.mvMatrix, nMatrix);
+	mat4.transpose(nMatrix, nMatrix);
+	this.gl.uniformMatrix4fv(this.currentProgram.attributeSet.nMatrix.location, false, nMatrix);
 };
 
 GLEngine.prototype.setLighting = function(enable) {
@@ -290,15 +298,15 @@ GLEngine.prototype.setLighting = function(enable) {
 	}
 	gl.uniform1i(attsSet.useLighting.location, enable);
 	if (enable) {
-		if(attsSet.ambientColor) gl.uniform3fv(attsSet.ambientColor.location, this.light.ambientColor);
-		if(attsSet.lightingColor) gl.uniform3fv(attsSet.lightingColor.location, this.light.lightingColor);
+		if (attsSet.ambientColor) gl.uniform3fv(attsSet.ambientColor.location, this.light.ambientColor);
+		if (attsSet.lightingColor) gl.uniform3fv(attsSet.lightingColor.location, this.light.lightingColor);
 		if (this.light.isPoint) {
-			if(attsSet.maxLightRange) gl.uniform1f(attsSet.maxLightRange.location, this.light.maxRange);
-			if(attsSet.usePointLighting) gl.uniform1i(attsSet.usePointLighting.location, true);
-			if(attsSet.lightingPosition) gl.uniform3fv(attsSet.lightingPosition.location, this.light.position);
+			if (attsSet.maxLightRange) gl.uniform1f(attsSet.maxLightRange.location, this.light.maxRange);
+			if (attsSet.usePointLighting) gl.uniform1i(attsSet.usePointLighting.location, true);
+			if (attsSet.lightingPosition) gl.uniform3fv(attsSet.lightingPosition.location, this.light.position);
 		} else {
-			if(attsSet.usePointLighting) gl.uniform1i(attsSet.usePointLighting.location, false);
-			if(attsSet.lightingDirection) gl.uniform3fv(attsSet.lightingDirection.location, this.light.direction);
+			if (attsSet.usePointLighting) gl.uniform1i(attsSet.usePointLighting.location, false);
+			if (attsSet.lightingDirection) gl.uniform3fv(attsSet.lightingDirection.location, this.light.direction);
 		}
 	}
 };
@@ -332,6 +340,10 @@ GLEngine.prototype.enableAttribute = function(attributeName) {
 		var att = this.currentProgram.attributeSet[attributeName];
 		if (this.currentProgram.attributeSet[attributeName].type == 'attribute') {
 			try {
+				if (att.location == null) {
+					AntiSpammer.tell("GLEngine", "The attribute " + attributeName + " has no location");
+					return;
+				}
 				this.gl.enableVertexAttribArray(att.location);
 				this.gl.vertexAttribPointer(att.location, att.count, this.gl.FLOAT, false, 0, 0);
 			} catch (e) {
@@ -339,7 +351,7 @@ GLEngine.prototype.enableAttribute = function(attributeName) {
 			}
 		}
 	} else {
-		AntiSpammer.tell('AttributeNotFound', "Attribute was not found...");
+		AntiSpammer.tell('AttributeNotFound ' + attributeName, "Attribute was not found " + attributeName);
 	}
 };
 
@@ -350,7 +362,7 @@ GLEngine.prototype.disableAttribute = function(attributeName) {
 			this.gl.disableVertexAttribArray(att.location);
 		}
 	} else {
-		AntiSpammer.tell('AttributeNotFound', "Attribute was not found...");
+		AntiSpammer.tell('AttributeNotFound', "Attribute was not found for disable " + attributeName);
 	}
 };
 
@@ -387,6 +399,8 @@ GLEngine.prototype.useProgram = function(params) {
 							count: count,
 							type: type
 						};
+						console.log("Got new attribute location of " + name + " (" + key + ") at location " + shaderProgram.attributeSet[key].location);
+
 					} else if (type == 'uniform') {
 						shaderProgram.attributeSet[key] = {
 							location: obj.gl.getUniformLocation(shaderProgram, name),
@@ -395,7 +409,7 @@ GLEngine.prototype.useProgram = function(params) {
 							uniformType: params.attributeSet[key].uniformType
 						};
 						console.log("Got new uniform location of " + name + " (" + key + ") at location " + shaderProgram.attributeSet[key].location);
-					}
+					} else {}
 					// console.log("Shader program has attribute '" + key + "'' as {" + shaderProgram.attributeSet[key].location +
 					// 	"," + shaderProgram.attributeSet[key].count + ", '" + name + "''}");
 				}
@@ -526,9 +540,6 @@ GLMesh.prototype.draw = function() {
 		// AntiSpammer.tell('1', "Drawing points " + this.pointSize + " ; " + this.drawMode);
 	}
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-	this.env.enableAttribute('pos');
-
 	if (this.hasTexture) {
 		// Render this with the texture
 		this.env.disableAttribute('color');
@@ -561,6 +572,9 @@ GLMesh.prototype.draw = function() {
 
 	this.env.setMatrixUniforms();
 
+	gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+	this.env.enableAttribute('pos');
+
 	if (this.indexArray) {
 		gl.drawElements(this.drawMode, this.indexArray.length, gl.UNSIGNED_SHORT, 0);
 	} else {
@@ -579,8 +593,10 @@ GLEngine.GLPrimitiveMeshes.TexturedSquare = function(gleng, size, imageSource) {
 		hasColor: false,
 		hasTexture: true,
 		hasLighting: true,
-		vertexArray: [-size, -size, 0.0, -size, size, 0.0,
+		vertexArray: [
+			-size, -size, 0.0, 
 			size, -size, 0.0,
+			-size, size, 0.0,
 			size, size, 0.0
 		],
 		colorArray: null,
@@ -634,14 +650,26 @@ GLEngine.GLPrimitiveMeshes.PointCloud = function(gleng, objFileSource) {
 	});
 };
 
-GLEngine.GLPrimitiveMeshes.LightMesh = function(gleng, glLight) {
-	var vert;
+GLEngine.GLPrimitiveMeshes.PointSphere = function(gleng, radius) {
+	var vert = new Array();
+	var color = new Array();
 	// vert = glLight.position;
-	for (var theta = 0; theta < 360; thera += 360 / 15) {
-		for (var phi = 0; phi < 360; phi += 360 / 15) {}
+	for (var theta = 0; theta < 360; theta += 360 / 30) {
+		for (var phi = 0; phi < 360; phi += 360 / 30) {
+			vert.push(Math.cos(theta) * Math.sin(phi) * radius, 
+				Math.sin(theta) * Math.sin(phi) * radius, 
+				Math.cos(phi) * radius);
+			color.push(1, 1, 1, 1);
+		}
 	}
-	var color = new Array(1, 1, 1, 1);
-	return new GLMesh(gleng, false, false, false, vert, color, [], [], null, gleng.gl.POINTS, null, 1.0)._construct();
+	return new GLMesh({
+		gleng : gleng,
+		hasColor : true,
+		vertexArray : vert,
+		colorArray : color,
+		pointSize:4.0,
+		drawMode: gleng.gl.POINTS
+	});
 };
 
 
@@ -803,7 +831,11 @@ GLMatrix.printStack = function(matrix) {
 GLMatrix.matrixPop = function(matrix) {
 	for (var i = 0; i < GLMatrix.stacks.length; i++) {
 		if (GLMatrix.stacks[i].matrix == matrix) {
-			return GLMatrix.stacks[i].stack.pop();
+			var m = GLMatrix.stacks[i].stack.pop();
+			for(var i = 0 ; i < 16 ; i++){
+				matrix[i] = m[i];
+			}
+			return matrix;
 		}
 	};
 };
@@ -895,9 +927,9 @@ GLObject.prototype.draw = function() {
 	mat4.translate(this.transformMatrix, this.position);
 
 	GLMatrix.matrixPush(this.gleng.mvMatrix);
-	mat4.multiply(this.gleng.mvMatrix, this.transformMatrix);
+	mat4.multiply(this.gleng.mvMatrix, this.transformMatrix, this.gleng.mvMatrix);
 	this.mesh.draw();
-	this.gleng.mvMatrix = GLMatrix.matrixPop(this.gleng.mvMatrix);
+	GLMatrix.matrixPop(this.gleng.mvMatrix);
 };
 
 GLObject.prototype.setPosition = function(position) {

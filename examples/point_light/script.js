@@ -58,15 +58,14 @@ function webGLStart() {
 	});
 
 	gleng.useProgram({
-		vertexShader: 'vertexShader',
-		fragmentShader: 'fragmentShader',
+		vertexShader: '../../shaders/vertex.sl',
+		fragmentShader: '../../shaders/fragment.sl',
 		attributeSet: {
 			pos: {
 				name: 'aPos',
 				count: 3,
 				type: 'attribute',
 			},
-
 			texture: {
 				name: 'aTex',
 				count: 2,
@@ -85,6 +84,13 @@ function webGLStart() {
 			},
 			mvMatrix: {
 				name: 'uMVMatrix',
+				count: 1,
+				type: 'uniform',
+				uniformType: 'mat4'
+			},
+			/*Normal transformation marix*/
+			nMatrix: {
+				name: 'uNMatrix',
 				count: 1,
 				type: 'uniform',
 				uniformType: 'mat4'
